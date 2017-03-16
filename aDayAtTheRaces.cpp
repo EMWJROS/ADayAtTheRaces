@@ -21,8 +21,14 @@ int raceCounter = 0;
  *****************************************************************************/
 bool race( vector<Horse*> &contestants)
   {
+    if (contestants.size() <= 1)
+      {
+	return true;
+      }
+
     if (contestants.size() > NUM_OF_HORSES_IN_RACE)
       {
+	cout << "Trying to race too many horses!" << endl;
 	return false;
       }
 
@@ -48,70 +54,132 @@ bool race( vector<Horse*> &contestants)
     return inOrder;
   }
 
-void bubblesort(array<Horse*, MAX_NUM_OF_HORSES> raceHorses)
+void displayResults(array<Horse*, MAX_NUM_OF_HORSES> &raceHorses)
 {
-  int stoppingHorse = 0;
-  bool ordered  = false;
-
-  /* Continue racing horses against each other. Quit when no further order
-     can be achieved.*/
-  while ((stoppingHorse < MAX_NUM_OF_HORSES - NUM_OF_HORSES_IN_RACE) &&
-	 !ordered) 
-    {
-      int startingHorse = MAX_NUM_OF_HORSES - NUM_OF_HORSES_IN_RACE;
-      /* Reset order. */
-      ordered  = true;
-
-      /* Check that there are enough horses to race against eachother. */
-      while (startingHorse + (NUM_OF_HORSES_IN_RACE - WINDOW) > stoppingHorse)
-	{
-
-	  int numOfContestants = NUM_OF_HORSES_IN_RACE;
-
-	  /* Adjust the final race. */
-	  if (startingHorse < stoppingHorse)
-	    {
-	      /* We only race stoppingHorse to previous startingHorse. */
-	      numOfContestants = startingHorse + NUM_OF_HORSES_IN_RACE - 
-		WINDOW - stoppingHorse + 1;
-	      startingHorse = stoppingHorse;
-	    }
-
-	  /* Pick out our starting lineup */
-	  vector<Horse*> lineup;
-
-	  for (int i=0; i < numOfContestants; ++i)
-	    {
-	      lineup.push_back(raceHorses[i+startingHorse]);
-	    }
-
-	  bool lastRaceOrdered = race(lineup);
-	  ordered = ordered && lastRaceOrdered;
-
-	  /* Put them back in the stable in order. */
-	  for (int i=0; i<lineup.size(); ++i)
-	    {
-	      raceHorses[startingHorse+i] = lineup[i];
-	    }
-
-	  /* Move the window. */
-	  startingHorse -= (NUM_OF_HORSES_IN_RACE - WINDOW);
-	}
-
-      stoppingHorse += WINDOW;
-
-    } 
-
   /* Display the results. */
+#ifdef ALL_RESULTS
   int position = 1;
 
   for (auto a : raceHorses)
     {
       cout << "Position " << position++ << " Horse #" << a->raceTime << endl;
     }
+#endif
 
   cout << "In total " << raceCounter << " races were run." << endl;
   cout << "(It might have been easier to buy a stop watch ...)" << endl;
+}
+
+void horseracing(array<Horse*, MAX_NUM_OF_HORSES> &raceHorses, 
+	  int firstIndex, int lastIndex)
+{
+  if (lastIndex - firstIndex < 5)
+    {
+      // copy to vector and race
+      vector<Horse*> lineup;
+      for (int i=firstIndex; i<=lastIndex; ++i)
+	{
+	  lineup.push_back(raceHorses[i]);
+	}
+      race(lineup);
+
+      // put back
+      for (int i=0; i<lineup.size(); ++i)
+	{
+	  raceHorses[firstIndex + i] = lineup[i];
+	}
+      // done
+    }
+  else
+    {
+      int pivotHorse = (lastIndex + firstIndex)/2;
+      vector<Horse*> fastBin;
+      vector<Horse*> slowBin;
+
+      int contestant = firstIndex;
+      int numberInRace = 0;
+      vector<Horse*> testLineup;
+      testLineup.push_back(raceHorses[pivotHorse]);
+
+      while (contestant <= lastIndex)
+	{
+	  if (contestant != pivotHorse)
+	    {
+	      testLineup.push_back(raceHorses[contestant]);
+	      numberInRace++;
+	    }
+	  contestant++;
+	  
+	  /* Every fourth horse we add, we race them against the pivot. */
+	  if (numberInRace == 4)
+	    {
+	      race(testLineup);
+
+	      int fastHorse = 0;
+	      while (testLineup[fastHorse]->name !=
+					  raceHorses[pivotHorse]->name)
+		{
+		  fastBin.push_back(testLineup[fastHorse++]);
+		}
+
+	      int slowHorse = fastHorse+1;
+	      while(slowHorse < testLineup.size())
+		{
+		  slowBin.push_back(testLineup[slowHorse++]);
+		}
+	      testLineup.clear();
+	      testLineup.push_back(raceHorses[pivotHorse]);
+	      numberInRace = 0;
+	    }
+
+        }
+	    /* Do we have any un-raced horses left in the pen? */
+	    if (testLineup.size() != 1)
+	      {
+		race(testLineup);
+
+		int fastHorse = 0;
+		while (testLineup[fastHorse]->name !=
+					    raceHorses[pivotHorse]->name)
+		  {
+		    fastBin.push_back(testLineup[fastHorse++]);
+		  }
+
+		int slowHorse = fastHorse+1;
+		while(slowHorse < testLineup.size())
+		  {
+		    slowBin.push_back(testLineup[slowHorse++]);
+		  }
+	      }
+
+	  // put bins back into stable, and race again
+
+	  Horse* pivotHorse_p = raceHorses[pivotHorse];
+	  int horse = firstIndex;
+	  for (int i=0; i < fastBin.size(); ++i)
+	    {
+	      raceHorses[horse++] = fastBin[i];
+	    }
+
+	  pivotHorse = horse;
+	  raceHorses[horse++] = pivotHorse_p;
+
+	  for (int i=0; i < slowBin.size(); ++i)
+	    {
+	      raceHorses[horse++] = slowBin[i];
+	    }
+
+	  horseracing(raceHorses, firstIndex, pivotHorse-1);
+	  horseracing(raceHorses, pivotHorse+1, lastIndex);
+    }
+
+}
+
+void quicksort(array<Horse*, MAX_NUM_OF_HORSES> raceHorses)
+{
+  horseracing(raceHorses, 0, MAX_NUM_OF_HORSES-1);
+  displayResults(raceHorses);
+
 }
 
 main()
@@ -126,7 +194,6 @@ main()
       stable[i] = stuteri.makeHorse(number);
     }
 
-  bubblesort(stable);
-
+  quicksort(stable);
   return 0;
 }
