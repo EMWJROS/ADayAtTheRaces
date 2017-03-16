@@ -2,6 +2,7 @@
 #include "StudFarm.h"
 #include <iostream>
 #include <array>
+#include <vector>
 #include <algorithm>
 #include <functional>
 
@@ -12,17 +13,22 @@ using namespace std;
 int raceCounter = 0;
 
 /******************************************************************************
- * Sorts an array of pointers to Horse objects
+ * Sorts a vector of pointers to Horse objects
  *
  * Friend of the Horse class
- * @param contestants Array of Horse pointers
- * @return True if the array already was in order
+ * @param contestants Vector of Horse pointers
+ * @return True if the vector already was in order
  *****************************************************************************/
-bool race( array<Horse*, NUM_OF_HORSES_IN_RACE> &contestants)
+bool race( vector<Horse*> &contestants)
   {
+    if (contestants.size() > NUM_OF_HORSES_IN_RACE)
+      {
+	return false;
+      }
+
     bool inOrder = true;
 
-    for (int i=0; i < NUM_OF_HORSES_IN_RACE-1; ++i)
+    for (int i=0; i < contestants.size()-1; ++i)
       {
 	inOrder &= (contestants[i]->raceTime < contestants[i+1]->raceTime);
       }
@@ -42,18 +48,8 @@ bool race( array<Horse*, NUM_OF_HORSES_IN_RACE> &contestants)
     return inOrder;
   }
 
-main()
+void bubblesort(array<Horse*, MAX_NUM_OF_HORSES> raceHorses)
 {
-  StudFarm stuteri;
-  array<Horse*, MAX_NUM_OF_HORSES> raceHorses;
-
-  /* Fill our stable with horses from the stud farm */
-  for(int i=0; i<MAX_NUM_OF_HORSES; ++i)
-    {
-      string number = to_string(i);
-      raceHorses[i] = stuteri.makeHorse(number);
-    }
-
   int stoppingHorse = 0;
   bool ordered  = false;
 
@@ -69,25 +65,31 @@ main()
       /* Check that there are enough horses to race against eachother. */
       while (startingHorse + (NUM_OF_HORSES_IN_RACE - WINDOW) > stoppingHorse)
 	{
+
+	  int numOfContestants = NUM_OF_HORSES_IN_RACE;
+
 	  /* Adjust the final race. */
 	  if (startingHorse < stoppingHorse)
 	    {
+	      /* We only race stoppingHorse to previous startingHorse. */
+	      numOfContestants = startingHorse + NUM_OF_HORSES_IN_RACE - 
+		WINDOW - stoppingHorse + 1;
 	      startingHorse = stoppingHorse;
 	    }
 
 	  /* Pick out our starting lineup */
-	  array<Horse*, NUM_OF_HORSES_IN_RACE> lineup;
+	  vector<Horse*> lineup;
 
-	  for (int i=0; i < NUM_OF_HORSES_IN_RACE; ++i)
+	  for (int i=0; i < numOfContestants; ++i)
 	    {
-	      lineup[i] = raceHorses[i+startingHorse];
+	      lineup.push_back(raceHorses[i+startingHorse]);
 	    }
 
 	  bool lastRaceOrdered = race(lineup);
 	  ordered = ordered && lastRaceOrdered;
 
 	  /* Put them back in the stable in order. */
-	  for (int i=0; i<NUM_OF_HORSES_IN_RACE; ++i)
+	  for (int i=0; i<lineup.size(); ++i)
 	    {
 	      raceHorses[startingHorse+i] = lineup[i];
 	    }
@@ -110,6 +112,21 @@ main()
 
   cout << "In total " << raceCounter << " races were run." << endl;
   cout << "(It might have been easier to buy a stop watch ...)" << endl;
+}
+
+main()
+{
+  StudFarm stuteri;
+  array<Horse*, MAX_NUM_OF_HORSES> stable;
+
+  /* Fill our stable with horses from the stud farm */
+  for(int i=0; i<MAX_NUM_OF_HORSES; ++i)
+    {
+      string number = to_string(i);
+      stable[i] = stuteri.makeHorse(number);
+    }
+
+  bubblesort(stable);
 
   return 0;
 }
