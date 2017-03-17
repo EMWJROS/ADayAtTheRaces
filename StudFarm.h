@@ -1,9 +1,9 @@
 #ifndef __STUD_FARM_H
-#define __STUD_FRAM_H
+#define __STUD_FARM_H
 
+#include "globalDefines.h"
 #include <string>
 #include "Horse.h"
-#define MAX_NUM_OF_HORSES 125
 
 class StudFarm
 {
