@@ -1,6 +1,7 @@
 #include "globalDefines.h"
 #include "Horse.h"
 #include "StudFarm.h"
+#include "Racetrack.h"
 #include <iostream>
 #include <array>
 #include <vector>
@@ -9,54 +10,6 @@
 
 using namespace std;
 
-/** Contains a fixed number of Horses.*/
-typedef array<Horse*, MAX_NUM_OF_HORSES> Stable;
-/** Contains a number of horses.*/
-typedef vector<Horse*> HorsePen;
-/** Counts how many races we've actually run.*/
-int raceCounter = 0;
-
-/******************************************************************************
- * Sorts a vector of pointers to Horse objects
- *
- * Friend of the Horse class
- * @param contestants Vector of Horse pointers
- * @return True if the vector already was in order
- *****************************************************************************/
-bool race(HorsePen &contestants)
-  {
-    if (contestants.size() <= 1)
-      {
-	return true;
-      }
-
-    if (contestants.size() > NUM_OF_HORSES_IN_RACE)
-      {
-	cout << "Trying to race too many horses!" << endl;
-	return false;
-      }
-
-    bool inOrder = true;
-
-    for (int i=0; i < contestants.size()-1; ++i)
-      {
-	inOrder &= (contestants[i]->raceTime < contestants[i+1]->raceTime);
-      }
-
-    if (!inOrder)
-      {
-	struct winner{
-	  inline bool operator()(Horse* a, Horse* b)
-	  {
-	    return a->raceTime < b->raceTime;
-	  }
-	};
-
-	sort(contestants.begin(), contestants.end(), winner());
-      }
-    raceCounter++;
-    return inOrder;
-  }
 
 /*****************************************************************************
  * Displays the outcome of the race
@@ -77,7 +30,8 @@ void displayResults(Stable &raceHorses)
     }
 #endif
 
-  cout << "In total " << raceCounter << " races were run." << endl;
+  cout << "In total " << Racetrack::getNumberOfRaces() << " races were run." << 
+    endl;
   cout << "(It might have been easier to buy a stop watch ...)" << endl;
 }
 
@@ -96,7 +50,7 @@ void raceAgainstPivot(HorsePen &testLineup,
 		      HorsePen &fastBin,
 		      HorsePen &slowBin)
 {
-  race(testLineup);
+  Racetrack::race(testLineup);
 
   int fastHorse = 0;
   while (testLineup[fastHorse]->name != name)
@@ -129,7 +83,7 @@ void quicksort(Stable &raceHorses,
 	{
 	  lineup.push_back(raceHorses[i]);
 	}
-      race(lineup);
+      Racetrack::race(lineup);
 
       /* Put back. */
       for (int i=0; i<lineup.size(); ++i)
