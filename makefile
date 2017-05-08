@@ -1,7 +1,10 @@
 all: aDayAtTheRaces.exe
 
-aDayAtTheRaces.exe: aDayAtTheRaces.o StudFarm.o Racetrack.o
-	g++ -o aDayAtTheRaces.exe -g aDayAtTheRaces.o StudFarm.o Racetrack.o
+aDayAtTheRaces.exe: aDayAtTheRaces.o StudFarm.o Racetrack.o Horse.o
+	g++ -o aDayAtTheRaces.exe -g aDayAtTheRaces.o StudFarm.o Racetrack.o Horse.o
+
+Horse.o: Horse.cpp
+	gcc -c -std=gnu++0x Horse.cpp
 
 aDayAtTheRaces.o: aDayAtTheRaces.cpp
 	gcc -c -std=gnu++0x aDayAtTheRaces.cpp

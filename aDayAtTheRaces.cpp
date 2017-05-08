@@ -40,20 +40,20 @@ void displayResults(Stable &raceHorses)
  * 
  * Slower and faster horses are added to vectors.
  *
- * @param testLineup A vector of pointers to horses
- * @param name       The name of the pivot horse
- * @param fastBin    A vector to put fast horses in
- * @param slowBin    A vector to put slow horses in
+ * @param testLineup      A vector of pointers to horses
+ * @param pivotName       The name of the pivot horse
+ * @param fastBin         A vector to put fast horses in
+ * @param slowBin         A vector to put slow horses in
  ***************************************************************************/
 void raceAgainstPivot(HorsePen &testLineup, 
-		      string name,
+		      string pivotName,
 		      HorsePen &fastBin,
 		      HorsePen &slowBin)
 {
   Racetrack::race(testLineup);
 
   int fastHorse = 0;
-  while (testLineup[fastHorse]->name != name)
+  while (testLineup[fastHorse]->name != pivotName)
     {
       fastBin.push_back(testLineup[fastHorse++]);
     }
@@ -63,6 +63,21 @@ void raceAgainstPivot(HorsePen &testLineup,
     {
       slowBin.push_back(testLineup[slowHorse++]);
     }
+
+  /* Fix relations.*/
+  for (int i=0; i < testLineup.size(); ++i)
+    {
+      /* We don't need to bother with the pivot. */
+      if (testLineup[i]->name != pivotName)
+	{
+	  for (int j=i+1; j < testLineup.size(); ++j)
+	    {
+	      testLineup[i]->isFasterThan(testLineup[j]->name);
+	      testLineup[j]->isSlowerThan(testLineup[i]->name);
+	    }
+	}
+    }
+	  
 }
 
 /*****************************************************************************
@@ -112,11 +127,21 @@ void quicksort(Stable &raceHorses,
 
       while (contestant <= lastIndex)
 	{
+	  SpeedRelation speed = 
+	    raceHorses[contestant]->comparedTo(raceHorses[pivotHorse]->name);
 	  /* We've already got the pivotHorse on the starting line.*/
-	  if (contestant != pivotHorse)
+	  if ((contestant != pivotHorse) && (speed == UNDETERMINED))
 	    {
 	      testLineup.push_back(raceHorses[contestant]);
 	      numberInRace++;
+	    }
+	  else if (speed == FASTER) /* We have already raced them. */
+	    {
+	      fastBin.push_back(raceHorses[contestant]);
+	    }
+	  else if (speed == SLOWER)
+	    {
+	      slowBin.push_back(raceHorses[contestant]);
 	    }
 	  contestant++;
 	  

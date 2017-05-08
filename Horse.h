@@ -5,6 +5,13 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <map>
+
+enum SpeedRelation
+{ UNDETERMINED,
+  FASTER,
+  EQUAL,
+  SLOWER};
 
 class Racetrack;
 
@@ -13,9 +20,14 @@ class Horse
  public:
   Horse(std::string s, int rt) : name(s), raceTime(rt) {};
   std::string name;
+  void isSlowerThan(std::string competitor);
+  void isFasterThan(std::string competitor);
+  SpeedRelation comparedTo(std::string competitor);
 
 private:
   int raceTime;
+  std::map<std::string, SpeedRelation> relations;
+
 
 /* Declare friend function that are entrusted to look at the raceTime.*/
 friend class Racetrack;
